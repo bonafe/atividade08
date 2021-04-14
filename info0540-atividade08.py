@@ -21,6 +21,7 @@ def lerLinhas():
 def abrirConexao():
     global driver
     global session
+    print("Abrindo conexao\n")
     uri = 'neo4j://localhost:7687'
     driver = GraphDatabase.driver(uri, auth=("neo4j", "neo4j2021"), max_connection_lifetime=1000)
     session = driver.session()
@@ -29,9 +30,14 @@ def abrirConexao():
 def fecharConexao():
     global driver
     global session
+    print("Fechando conexao\n")
     session.close()
     driver.close()
 
+def limparNeo4J():
+    global session
+    print ("Limpando linhas\n")
+    session.run("match(n) detach  delete  n;")
 
 def processarLinhas(linhas):
     for linha in linhas[1:]:
@@ -39,26 +45,30 @@ def processarLinhas(linhas):
         ip_rede_destino = ips[0]
         ip_gateway = ips[1]
 
-        verificaECria(ip_rede_destino)
-        verificaECria(ip_gateway)
-        criarArestaNeo4J(ip_rede_destino, ip_gateway)
+        verificaECria(ip_rede_destino, "REDE_DESTINO")
+        verificaECria(ip_gateway, "GATEWAY")
+        criarArestaNeo4J(ip_gateway, ip_rede_destino)
 
-def verificaECria(ip):
+def verificaECria(ip, tipo):
     # Verificar na lista local se o ip exite
     if not existeIP(ip):
+        print(f'IP não encontrado! Criando ip: {ip}')
         # Caso não exista cria um novo nó no Neo4j
-        criarVerticeNeo4J(ip)
+        criarVerticeNeo4J(ip, tipo)
+    else:
+        print(f"********************** IP ENCONTRADO!!!!!!!!!!!!! {ip}")
 
 
-def criarVerticeNeo4J(ip):
+def criarVerticeNeo4J(ip, tipo):
     global session
-    session.run("CREATE(novo_ip: IP {ip: '" + ip + "'});")
+    session.run("CREATE(novo_ip: " + tipo + " {ip: '" + ip + "'});")
 
-def criarArestaNeo4J(ip_destino, ip_gateway):
+def criarArestaNeo4J(ip_gateway, ip_destino):
     global session
+    print(f'Criando aresta: {ip_gateway} -> {ip_destino}')
     session.run(
-        "match(ip_origem: IP {ip: '" + ip_destino + "'}) match(ip_destino: IP {ip: '" + ip_gateway + "'})" +
-        "create(ip_origem) - [variavel_conexao: CONEXAO] -> (ip_destino)" +
+        "match(ip_destino: REDE_DESTINO {ip: '" + ip_destino + "'}) match(ip_gateway: GATEWAY {ip: '" + ip_gateway + "'})" +
+        "create(ip_gateway) - [variavel_conexao: CONEXAO] -> (ip_destino)" +
         "return ID(variavel_conexao);")
 
 
@@ -68,9 +78,11 @@ def existeIP(ip):
         lista_ips.index("ip")
         return True
     except:
+        lista_ips.append(ip)
         return False
 
 
 abrirConexao()
+limparNeo4J()
 processarLinhas(lerLinhas())
 fecharConexao()
