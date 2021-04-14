@@ -75,7 +75,7 @@ def criarArestaNeo4J(ip_gateway, ip_destino):
 def existeIP(ip):
     global lista_ips
     try:
-        lista_ips.index("ip")
+        lista_ips.index(ip)
         return True
     except:
         lista_ips.append(ip)
