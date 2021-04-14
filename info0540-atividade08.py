@@ -2,6 +2,13 @@
 # https://neo4j.com/docs/cypher-manual/current/clauses/
 # install pip3 install neo4j
 
+#Grupo Python na Veia
+#Daniela Jardini
+#Luis Eduardo Moreira Saran
+#Fernando Bonafé
+#João Batista Barros Bittencourt
+#Marcos Edson Cornelio
+
 from neo4j import GraphDatabase
 import re
 
